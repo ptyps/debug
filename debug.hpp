@@ -1,33 +1,35 @@
 #pragma once
 
-#include "pstd.hpp"
+#include <string>
 
 namespace debugging {
   namespace colors {
-    static uint reset = 0;
-    static uint bold = 1;
-    static uint faint = 2;
-    static uint underline = 4;
-    static uint blink = 5;
+    static uint RESET = 0;
+    static uint BOLD = 1;
+    static uint FAINT = 2;
+    static uint UNDERLINE = 4;
+    static uint BLINK = 5;
 
-    static uint black = 30;
-    static uint red = 31;
-    static uint green = 32;
-    static uint yellow = 33;
-    static uint blue = 34;
-    static uint magenta = 35;
-    static uint cyan = 36;
-    static uint white = 37;
+    static uint BLACK = 30;
+    static uint RED = 31;
+    static uint GREEN = 32;
+    static uint YELLOW = 33;
+    static uint BLUE = 34;
+    static uint MAGENTA = 35;
+    static uint CYAN = 36;
+    static uint WHITE = 37;
   }
+
+  using vstring = std::string_view;
 
   class Debug {    
     private:
-      pstd::vstring name;
       bool enabled = !1;
+      vstring name;
       uint color;
 
     public:
-      Debug(pstd::vstring name, uint color = colors::magenta) : name(name), color(color) {
+      Debug(vstring name, uint color = colors::MAGENTA) : name(name), color(color) {
 
       }
 
@@ -40,19 +42,25 @@ namespace debugging {
       }
 
       template <typename ...A>
-        void log(pstd::vstring str, A ...args) {
+        void log(vstring str, A ...args) {
           if (!enabled)
             return;
 
           auto text = std::string();
 
-          text += pstd::format("\x1b[%im", color);
+          text += "\x1b[";
+          text += std::to_string(color);
+          text += "m";
           text += name;
-          text += pstd::format("\x1b[%im", colors::reset);
-          text += ": ";
-          text += pstd::format(str, args ...);
+          text += "\x1b[0m: ";
 
-          pstd::log(text); 
+          auto length = std::snprintf(nullptr, 0, &str[0], args...);
+          auto out = std::string(length, '\0');
+          std::sprintf(&out[0], &str[0], args...);
+          text += out.data();
+
+          printf(&text[0]);
+          printf("\n");
         }
   };
 }
